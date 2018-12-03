@@ -9,7 +9,6 @@
  * The following code is not an exhaustive list of the capabilities of the REST API and is only
  * meant as a demonstration on how to get up and running.
  * 
- * The code is provided as is with no form of warranty
  * 
  * 
  * *******************************************************************************************/
