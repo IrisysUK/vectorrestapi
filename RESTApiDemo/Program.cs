@@ -28,7 +28,7 @@ namespace RESTApiDemo
         const bool EMConnect = false;
 
         // Base address of the EM instance or the device you're talking to
-        static string baseAddress = "http://<IP Address here>/";
+        static string baseAddress = "http://<device address here>/";
 
         // Web API key for the device (can be found on the security page of the device) or EM instance (can be found on the My Account page)
         static string webApiKey = "'<API Key here>'";
@@ -68,8 +68,49 @@ namespace RESTApiDemo
             // Same again
             JToken countData2 = GetPageOfCounts(baseAddress, accessToken, (string)connectionToken["Token"]);
 
+            // Get some histograms
+            JToken histogramData = GetPageOfHistograms(baseAddress, accessToken, (string)connectionToken["Token"]);
+
             // When we're done gathering data then disconnect from the device
             Disconnect(baseAddress, accessToken, (string)connectionToken["Token"]);
+        }
+
+        /// <summary>
+        /// Get the most recent 10 histogram log entrie from a device
+        /// </summary>
+        /// <param name="baseAddress">Base address of the device</param>
+        /// <param name="accessToken">Security access token</param>
+        /// <param name="connectionToken">Connection token</param>
+        /// <returns></returns>
+        static JToken GetPageOfHistograms(string baseAddress, string accessToken, string connectionToken)
+        {
+            string data;
+
+            string url = baseAddress + "api/rt/v1/histograms/histogramspagerange?token=" + connectionToken + "&count=10&nextIndex=0&newestFirst=true";
+
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+
+            WebHeaderCollection webHeaderCollection = new WebHeaderCollection();
+            webHeaderCollection.Add(HttpRequestHeader.Authorization, accessToken);
+
+            httpWebRequest.Headers = webHeaderCollection;
+            httpWebRequest.MediaType = "application/json";
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Accept = "application/json";
+            httpWebRequest.Method = "GET";
+
+            using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+            {
+                using (var responseStream = response.GetResponseStream())
+                {
+                    using (var streamReader = new StreamReader(responseStream))
+                    {
+                        data = streamReader.ReadToEnd();
+                    }
+                }
+            }
+
+            return JToken.Parse(data);
         }
 
         /// <summary>
@@ -95,12 +136,16 @@ namespace RESTApiDemo
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Accept = "application/json";
             httpWebRequest.Method = "GET";
-            
-            var response = (HttpWebResponse)httpWebRequest.GetResponse();
 
-            using (var streamReader = new StreamReader(response.GetResponseStream()))
+            using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
             {
-                data = streamReader.ReadToEnd();
+                using (var responseStream = response.GetResponseStream())
+                {
+                    using (var streamReader = new StreamReader(responseStream))
+                    {
+                        data = streamReader.ReadToEnd();
+                    }
+                }
             }
 
             return JToken.Parse(data);
@@ -131,20 +176,27 @@ namespace RESTApiDemo
             httpWebRequest.Accept = "application/json";
             httpWebRequest.Method = "POST";
 
-            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            using (var requestStream = httpWebRequest.GetRequestStream())
             {
-                JObject dataObject = new JObject();
-                dataObject.Add("Device", deviceName);
-                dataObject.Add("Live", live);
+                using (var streamWriter = new StreamWriter(requestStream))
+                {
+                    JObject dataObject = new JObject();
+                    dataObject.Add("Device", deviceName);
+                    dataObject.Add("Live", live);
 
-                streamWriter.Write(dataObject.ToString());
+                    streamWriter.Write(dataObject.ToString());
+                }
             }
 
-            var response = (HttpWebResponse)httpWebRequest.GetResponse();
-
-            using (var streamReader = new StreamReader(response.GetResponseStream()))
+            using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
             {
-                data = streamReader.ReadToEnd();
+                using (var responseStream = response.GetResponseStream())
+                {
+                    using (var streamReader = new StreamReader(responseStream))
+                    {
+                        data = streamReader.ReadToEnd();
+                    }
+                }
             }
 
             return JToken.Parse(data);
@@ -169,16 +221,23 @@ namespace RESTApiDemo
             httpWebRequest.Accept = "text/plain";
             httpWebRequest.Method = "POST";
 
-            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            using (var requestStream = httpWebRequest.GetRequestStream())
             {
-                streamWriter.Write(webAPIKey);
+                using (var streamWriter = new StreamWriter(requestStream))
+                {
+                    streamWriter.Write(webAPIKey);
+                }
             }
 
-            var response = (HttpWebResponse)httpWebRequest.GetResponse();
-
-            using (var streamReader = new StreamReader(response.GetResponseStream()))
+            using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
             {
-                data = streamReader.ReadToEnd();
+                using (var responseStream = response.GetResponseStream())
+                {
+                    using (var streamReader = new StreamReader(responseStream))
+                    {
+                        data = streamReader.ReadToEnd();
+                    }
+                }
             }
 
             return data;
@@ -206,7 +265,9 @@ namespace RESTApiDemo
             httpWebRequest.Accept = "application/json";
             httpWebRequest.Method = "GET";
 
-            var response = (HttpWebResponse)httpWebRequest.GetResponse();
+            using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+            {
+            }
         }
     }
 }
